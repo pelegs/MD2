@@ -3,6 +3,7 @@
 
 import numpy as np
 from numpy.linalg import norm
+from itertools import product
 
 
 # -------- General maths functions  ------- #
@@ -15,6 +16,21 @@ def wrap(x, L):
     return value is w=3.
     """
     return x-L*np.floor(x/L)
+
+def get_neighboring_indices(indices, n=10, step=1, dim=3):
+    if dim==2:
+        i, j = indices
+    elif dim==3:
+        i, j, k = indices
+    else:
+        raise ValueError('Dim must be 2 or 3.')
+    x_ind = [x%n for x in np.arange(i-step, i+step+1, 1)]
+    y_ind = [y%n for y in np.arange(j-step, j+step+1, 1)]
+    if dim==2:
+        return list(product(x_ind, y_ind))
+    elif dim==3:
+        z_ind = [z%n for z in np.arange(k-step, k+step+1, 1)]
+        return list(product(x_ind, y_ind, z_ind))
 
 
 # -------- Vector related functions ------- #

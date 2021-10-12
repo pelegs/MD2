@@ -2,23 +2,22 @@
 # -*- coding: iso-8859-15 -*-
 
 import numpy as np
-from md import Grid
+from md import Grid, get_neighboring_indices
 import sys
 import pygame
 from pygame.locals import *
 
 
-def draw_cell(surface, grid, index, fill=False):
+def draw_cell(surface, grid, index, fill=[255,0,0]):
     ulc = grid.get_coordinates(index)[0]
     dims = grid.L/grid.n
     rect = (ulc[0], ulc[1], dims[0], dims[1])
-    if fill is not False:
-        pygame.draw.rect(surface, fill, rect)
+    pygame.draw.rect(surface, fill, rect)
     pygame.draw.rect(surface, [255, 255, 255], rect, width=2)
 
 
-width, height = np.random.randint(200,800,2)
-grid = Grid(n=np.random.randint(5,15), L=[width,height,0])
+width, height = 800, 800
+grid = Grid(n=15, L=[width,height,0])
 
 pygame.init()
 
@@ -27,9 +26,6 @@ fpsClock = pygame.time.Clock()
 
 screen = pygame.display.set_mode((width, height))
 
-for idx in grid.indices:
-    draw_cell(screen, grid, idx)
-idx_fill = (0,0)
 
 # Game loop
 while True:
@@ -39,15 +35,19 @@ while True:
             sys.exit()
 
     # Mechanism
-    prev_idx_fill = idx_fill
     cursor_pos = pygame.mouse.get_pos()
-    idx_fill = tuple(grid.get_indices(cursor_pos))
+    cursor_idx = tuple(grid.get_indices(cursor_pos))
+    neighbor_idx = get_neighboring_indices(cursor_idx, grid.n, 1, dim=2)
 
     # Draw
-    if idx_fill != prev_idx_fill:
-        draw_cell(screen, grid, prev_idx_fill, [0,0,0])
-    else:
-        draw_cell(screen, grid, idx_fill, [0,255,0])
+    for idx in grid.indices:
+        if idx in neighbor_idx:
+            if tuple(idx) == tuple(cursor_idx):
+                draw_cell(screen, grid, idx, [0,255,0])
+            else:
+                draw_cell(screen, grid, idx, [0,150,0])
+        else:
+            draw_cell(screen, grid, idx, [0,0,0])
     pygame.draw.circle(screen, [255,0,0], cursor_pos, 3)
 
     # Update
