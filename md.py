@@ -80,16 +80,18 @@ class Atom:
             rm2 = 1./d2
             rm6 = rm2**3
             rm12 = rm6**2
+            s6 = atom2.rad**6
+            s12 = s6**2
             dir = look_at(self.pos, atom2.pos)
-            SF = 24 * e * rm2 * (2*rm12-rm6) * dir
-            print(SF)
-            self.add_force(SF)
+            SF = -24 * e * rm2 * (2*s12*rm12-s6*rm6)
+            self.add_force(SF*dir)
         return SF
 
     def step(self, dt=0.0001):
         self.a = self.F*self.m_
         self.reset_force()
-        self.pos = self.pos + self.vel*dt + 0.5*self.a*dt**2
+        self.vel = self.vel + self.a*dt
+        self.pos = self.pos + self.vel*dt
 
     def step1(self, dt=0.001):
         self.pos = self.pos + self.vel*dt + 0.5*self.a*dt**2

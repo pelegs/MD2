@@ -43,29 +43,35 @@ for index1d, cell in enumerate(grid.cells):
 
 # Particles
 atom1 = Atom(
-    pos=np.array([380,400,400]),
-    vel=np.array([3E2,0,0]),
-    rad=7,
-    mass=1,
+    pos=np.array([400,400,400]),
+    vel=np.array([-250,0,0]),
+    rad=20,
+    mass=1E3,
 )
 atom2 = Atom(
-    pos=np.array([420,400,400]),
-    vel=np.array([-3E2,0,0]),
+    pos=np.array([300,400,400]),
+    vel=np.array([0,0,0]),
     rad=7,
     mass=1,
 )
 
+forces = []
+
 # Game loop
-while True:
+run = True
+while run:
     for event in pygame.event.get():
         if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
+            run = False
+            break
+#            sys.exit()
 
     # Mechanism
-    atom1.SoftS(atom2, e=1E4)
+    E=1E5
+    ff = atom1.SoftS(atom2, e=E)
+    forces.append((dist(atom1.pos, atom2.pos), atom1.F[0]))
     F1 = set_norm(atom1.F, 30)
-    atom2.SoftS(atom1, e=1E4)
+    atom2.SoftS(atom1, e=E)
     F2 = set_norm(atom2.F, 30)
     atom1.step(dt=0.001)
     atom2.step(dt=0.001)
@@ -93,3 +99,10 @@ while True:
     # Update
     pygame.display.flip()
     fpsClock.tick(fps)
+
+pygame.quit()
+
+# Data?
+with open('forces.data', 'w') as file:
+    for p in forces:
+        file.write('{}\n'.format(' '.join(map(str, p))))
