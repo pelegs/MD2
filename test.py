@@ -16,7 +16,7 @@ def draw_cell(surface, cell, fill=[0,0,0]):
 
 
 width, height = 800, 800
-grid = Grid(n=20, L=[width,height,0])
+grid = Grid(n=15, L=[width,height,800], neighbors_dist=2)
 
 pygame.init()
 
@@ -41,7 +41,7 @@ while True:
     cursor_idx_1d_prev = cursor_idx_1d
     prev_cell = grid.cells[cursor_idx_1d_prev]
     cursor_pos = pygame.mouse.get_pos()
-    cursor_pos_3d = (cursor_pos[0], cursor_pos[1], 0)
+    cursor_pos_3d = (cursor_pos[0], cursor_pos[1], 400)
     cursor_idx_3d = tuple(grid.get_index_3d_from_pos(cursor_pos_3d))
     cursor_idx_1d = grid.get_index_1d_from_3d(cursor_idx_3d)
     current_cell = grid.cells[cursor_idx_1d]

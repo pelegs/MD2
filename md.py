@@ -30,11 +30,24 @@ def get_neighboring_indices(indices, n=10, step=1):
 def norm_sqr(v):
     return np.sum([x**2 for x in v])
 
-def dist_sqrt(v1, v2):
+def dist_sqr(v1, v2):
     return norm_sqr(v1-v2)
 
 def dist(v1, v2):
     return norm(v1-v2)
+
+def normalize(v):
+    n = norm(v)
+    if n != 0:
+        return v/n
+    else:
+        return np.zeros(3)
+
+def set_norm(v, n):
+    return n*normalize(v)
+
+def look_at(v1, v2):
+    return normalize(v2-v1)
 
 
 # ----------------- Atom class  ----------------- #
@@ -58,19 +71,30 @@ class Atom:
     def add_force(self, F):
         self.F = self.F + F
 
-    def LJ(self, atom2, eps=1.0, force=None):
-        if force:
+    def SoftS(self, atom2, e=1.0, force=None):
+        if force is not None:
             self.add_force(-force)
             return
         else:
-            d = dist(self.pos, atom2.pos)
-            F = -24*eps*self.rad**6*(d**6-2*self.rad**6)/d**13
-            self.add_force(F)
+            d2 = dist_sqr(self.pos, atom2.pos)
+            rm2 = 1./d2
+            rm6 = rm2**3
+            rm12 = rm6**2
+            dir = look_at(self.pos, atom2.pos)
+            SF = 24 * e * rm2 * (2*rm12-rm6) * dir
+            print(SF)
+            self.add_force(SF)
+        return SF
 
-    def step1(dt=0.001):
+    def step(self, dt=0.0001):
+        self.a = self.F*self.m_
+        self.reset_force()
         self.pos = self.pos + self.vel*dt + 0.5*self.a*dt**2
 
-    def step2(dt=0.001):
+    def step1(self, dt=0.001):
+        self.pos = self.pos + self.vel*dt + 0.5*self.a*dt**2
+
+    def step2(self, dt=0.001):
         self.a = self.a_next
         self.a_next = self.F*self.m_
         self.reset_force()
@@ -116,7 +140,7 @@ class Cell:
 # ----------------- Grid class  ----------------- #
 
 class Grid:
-    def __init__(self, n=10, L=np.ones(3)):
+    def __init__(self, n=10, L=np.ones(3), neighbors_dist=1):
         self.n = n
         self.L = np.array(L)
         self.cell_dim = self.L/n
@@ -124,6 +148,7 @@ class Grid:
         self.indices = [
             x for x in product(range(n), range(n), range(n))
         ]
+        self.neighbors_dist = neighbors_dist
 
         # Create cells
         self.cells = []
@@ -136,7 +161,7 @@ class Grid:
         for cell in self.cells:
             neighbors = [self.cells[self.get_index_1d_from_3d(index3d)]
                          for index3d in get_neighboring_indices(
-                            cell.index3d, self.n, step=2
+                            cell.index3d, self.n, step=self.neighbors_dist
                         )]
             cell.set_neighbors(neighbors)
 
