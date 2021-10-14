@@ -26,8 +26,8 @@ def draw_vec(surface, pos, vec, color=[255,0,0]):
 
 
 
-width, height = 800, 800
-grid = Grid(n=15, L=[width,height,800], neighbors_dist=2)
+width, height = 100, 100
+grid = Grid(n=2, L=[width,height,200], neighbors_dist=2)
 
 pygame.init()
 
@@ -42,18 +42,15 @@ for index1d, cell in enumerate(grid.cells):
     draw_cell(cells_bg, cell, [0,0,0])
 
 # Particles
-atom1 = Atom(
-    pos=np.array([400,400,400]),
-    vel=np.array([-250,0,0]),
-    rad=20,
-    mass=1E3,
-)
-atom2 = Atom(
-    pos=np.array([300,400,400]),
-    vel=np.array([0,0,0]),
-    rad=7,
-    mass=1,
-)
+num_atoms = 10
+atoms = [Atom(
+              pos=np.random.uniform(0, width, 3),
+              vel=np.random.uniform(-1000, 1000, 3),
+              rad=5,
+              mass=1,
+         )
+         for _ in range(num_atoms)
+]
 
 forces = []
 
@@ -67,42 +64,21 @@ while run:
 #            sys.exit()
 
     # Mechanism
-    E=1E5
-    ff = atom1.SoftS(atom2, e=E)
-    forces.append((dist(atom1.pos, atom2.pos), atom1.F[0]))
-    F1 = set_norm(atom1.F, 30)
-    atom2.SoftS(atom1, e=E)
-    F2 = set_norm(atom2.F, 30)
-    atom1.step(dt=0.001)
-    atom2.step(dt=0.001)
+    for atom1 in atoms:
+        for atom2 in [x for x in atoms if x is not atom1]:
+            atom1.SoftS(atom2, e=1E6)
+        atom1.step(grid, dt=0.001)
 
     # Reset screen
     screen.fill([0,0,0])
     screen.blit(cells_bg, [0,0])
 
     # Draw
-    draw_atom(screen, atom1, [255,0,0])
-    draw_vec(
-        screen,
-        atom1.pos[:2],
-        F1[:2],
-        [255,255,255]
-    )
-    draw_atom(screen, atom2, [0,255,0])
-    draw_vec(
-        screen,
-        atom2.pos[:2],
-        F2[:2],
-        [255,255,255]
-    )
+    for atom in atoms:
+        draw_atom(screen, atom, [255,0,0])
 
     # Update
     pygame.display.flip()
     fpsClock.tick(fps)
 
 pygame.quit()
-
-# Data?
-with open('forces.data', 'w') as file:
-    for p in forces:
-        file.write('{}\n'.format(' '.join(map(str, p))))

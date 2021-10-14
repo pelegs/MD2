@@ -87,11 +87,16 @@ class Atom:
             self.add_force(SF*dir)
         return SF
 
-    def step(self, dt=0.0001):
+    def step(self, grid, dt=0.0001):
         self.a = self.F*self.m_
         self.reset_force()
         self.vel = self.vel + self.a*dt
         self.pos = self.pos + self.vel*dt
+
+        # Boundry conditions
+        for i in range(3):
+            if not (0 <= self.pos[i] <= grid.L[i]):
+                self.pos[i] = wrap(self.pos[i], grid.L[i])
 
     def step1(self, dt=0.001):
         self.pos = self.pos + self.vel*dt + 0.5*self.a*dt**2
