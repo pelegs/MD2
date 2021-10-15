@@ -53,9 +53,10 @@ def look_at(v1, v2):
 # ----------------- Atom class  ----------------- #
 
 class Atom:
-    def __init__(self,
+    def __init__(self, grid,
                  pos=np.zeros(3), vel=np.zeros(3),
                  mass=1, rad=1, id=-1, color=[255,255,255]):
+        self.grid = grid
         self.pos = pos
         self.vel = vel
         self.mass = mass
@@ -66,6 +67,9 @@ class Atom:
         self.a = np.zeros(3)
         self.a_next = np.zeros(3)
         self.reset_force()
+        self.neighbors = []
+        self.index1d = -1
+        self.index3d = [-1,-1,-1]
 
     def reset_force(self):
         self.F = np.zeros(3)
@@ -116,7 +120,18 @@ class Atom:
         self.P = self.m * self.vel
 
     def calc_KE(self):
-        self.KE = 0.5 * self.m * norm_sqr(self.vel)
+        return 0.5 * self.mass * norm_sqr(self.vel)
+
+    def set_indeices(self, index1d, index3d):
+        self.index1d = index1d
+        self.index3d = index3d
+
+    def calc_neighbors(self):
+        self.neighbors = [atom
+                          for cell in self.grid.cells[self.index1d].neighbors
+                          for atom in cell.particles
+                          if atom != self
+                         ]
 
 
 # ----------------- Cell class  ----------------- #
@@ -177,20 +192,22 @@ class Grid:
                         )]
             cell.set_neighbors(neighbors)
 
-    def reset(self):
+    def clear(self):
         for cell in self.cells:
-            cell.reset()
+            cell.clear()
 
     def insert(self, obj):
-        # Check validity of index
-        for i in range(3):
-            if not (0 <= index[i] < self.n):
-                raise ValueError('Index {} out of range.'.format(i))
-                return
-
         # Add obj to cell
         index3d = self.get_index_3d_from_pos(obj.pos)
         index1d = self.get_index_1d_from_3d(index3d)
+
+        # Check validity of index
+        for i in range(3):
+            if not (0 <= index3d[i] < self.n):
+                raise ValueError('Index {} out of range.'.format(i))
+                return
+
+        obj.set_indeices(index1d, index3d)
         self.cells[index1d].insert(obj)
 
     def get_index_3d_from_pos(self, pos):
