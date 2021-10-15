@@ -55,12 +55,14 @@ def look_at(v1, v2):
 class Atom:
     def __init__(self,
                  pos=np.zeros(3), vel=np.zeros(3),
-                 mass=1, rad=1):
+                 mass=1, rad=1, id=-1, color=[255,255,255]):
         self.pos = pos
         self.vel = vel
         self.mass = mass
         self.m_ = mass ** -1.0
         self.rad = rad
+        self.id = id
+        self.color = color
         self.a = np.zeros(3)
         self.a_next = np.zeros(3)
         self.reset_force()
@@ -68,8 +70,11 @@ class Atom:
     def reset_force(self):
         self.F = np.zeros(3)
 
+    def sum_forces(self):
+        return np.sum(self.F, axis=0)
+
     def add_force(self, F):
-        self.F = self.F + F
+        self.F = np.vstack((self.F, F))
 
     def SoftS(self, atom2, e=1.0, force=None):
         if force is not None:
@@ -77,18 +82,18 @@ class Atom:
             return
         else:
             d2 = dist_sqr(self.pos, atom2.pos)
-            rm2 = 1./d2
-            rm6 = rm2**3
-            rm12 = rm6**2
-            s6 = atom2.rad**6
+            d6 = d2**3
+            d13 = d2**6.5
+            s6 = (self.rad+atom2.rad)**6
             s12 = s6**2
             dir = look_at(self.pos, atom2.pos)
-            SF = -24 * e * rm2 * (2*s12*rm12-s6*rm6)
+            SF = 24 * e * s6 * (d6-2*s6) / d13
             self.add_force(SF*dir)
         return SF
 
     def step(self, grid, dt=0.0001):
-        self.a = self.F*self.m_
+        F = self.sum_forces()
+        self.a = F*self.m_
         self.reset_force()
         self.vel = self.vel + self.a*dt
         self.pos = self.pos + self.vel*dt

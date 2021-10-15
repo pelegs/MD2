@@ -6,6 +6,9 @@ from md import *
 import sys
 import pygame
 from pygame.locals import *
+from pygame.color import THECOLORS as COLORS
+from os import system
+clear = lambda: system('clear')
 
 
 def draw_cell(surface, cell, fill=[0,0,0]):
@@ -15,8 +18,10 @@ def draw_cell(surface, cell, fill=[0,0,0]):
     pygame.draw.rect(surface, [25, 25, 25], rect, width=3)
 
 
-def draw_atom(surface, atom, color):
-    pygame.draw.circle(surface, color, atom.pos[:2].astype(int), atom.rad)
+def draw_atom(surface, atom):
+    pygame.draw.circle(
+        surface, atom.color, atom.pos[:2].astype(int), atom.rad
+    )
 
 
 def draw_vec(surface, pos, vec, color=[255,0,0]):
@@ -25,9 +30,8 @@ def draw_vec(surface, pos, vec, color=[255,0,0]):
     )
 
 
-
-width, height = 100, 100
-grid = Grid(n=2, L=[width,height,200], neighbors_dist=2)
+width, height = 500, 500
+grid = Grid(n=2, L=[width,height,width], neighbors_dist=1)
 
 pygame.init()
 
@@ -42,17 +46,21 @@ for index1d, cell in enumerate(grid.cells):
     draw_cell(cells_bg, cell, [0,0,0])
 
 # Particles
-num_atoms = 10
+num_atoms = 20
 atoms = [Atom(
               pos=np.random.uniform(0, width, 3),
               vel=np.random.uniform(-1000, 1000, 3),
-              rad=5,
+              rad=10,
               mass=1,
+              color = np.random.randint(100,255,3),
+              id=id,
          )
-         for _ in range(num_atoms)
+         for id in range(num_atoms)
 ]
 
-forces = []
+for atom in atoms:
+    atom.pos[2] = width
+    atom.vel[2] = 0.0
 
 # Game loop
 run = True
@@ -61,12 +69,11 @@ while run:
         if event.type == QUIT:
             run = False
             break
-#            sys.exit()
 
     # Mechanism
     for atom1 in atoms:
-        for atom2 in [x for x in atoms if x is not atom1]:
-            atom1.SoftS(atom2, e=1E6)
+        for atom2 in [atom for atom in atoms if atom is not atom1]:
+            atom1.SoftS(atom2, e=1E3)
         atom1.step(grid, dt=0.001)
 
     # Reset screen
@@ -75,7 +82,7 @@ while run:
 
     # Draw
     for atom in atoms:
-        draw_atom(screen, atom, [255,0,0])
+        draw_atom(screen, atom)
 
     # Update
     pygame.display.flip()
