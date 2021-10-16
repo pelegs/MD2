@@ -33,6 +33,13 @@ def norm_sqr(v):
 def dist_sqr(v1, v2):
     return norm_sqr(v1-v2)
 
+def dist_wrap(v1, v2, grid):
+    dst = dist(v1, v2)
+    for i, d in enumerate(dst):
+        if d > grid.L[i]:
+            dsq[i] = dsq[i]-grid.L[i]/2
+    return dst
+
 def dist(v1, v2):
     return norm(v1-v2)
 
@@ -85,7 +92,7 @@ class Atom:
             self.add_force(-force)
             return
         else:
-            d2 = dist_sqr(self.pos, atom2.pos)
+            d2 = dist_wrap(self.pos, atom2.pos, grid)**2
             d6 = d2**3
             d13 = d2**6.5
             s6 = (self.rad+atom2.rad)**6
