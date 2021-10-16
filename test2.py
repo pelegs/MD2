@@ -82,9 +82,11 @@ while run:
 
     # Mechanism
     for atom1 in atoms:
+        atom1.step1(dt=0.0001)
         for atom2 in atom1.neighbors:
             atom1.SoftS(atom2, e=1E3)
-        atom1.step(grid, dt=0.001)
+    for atom in atoms:
+        atom.step2(dt=0.0001)
     total_KE = sum([atom.calc_KE() for atom in atoms])
     print('\r{:0.3f}'.format(total_KE))
 

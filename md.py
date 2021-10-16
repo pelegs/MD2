@@ -75,7 +75,7 @@ class Atom:
         self.F = np.zeros(3)
 
     def sum_forces(self):
-        return np.sum(self.F, axis=0)
+        self.F = np.sum(self.F, axis=0)
 
     def add_force(self, F):
         self.F = np.vstack((self.F, F))
@@ -95,23 +95,26 @@ class Atom:
             self.add_force(SF*dir)
         return SF
 
-    def step(self, grid, dt=0.0001):
+    def wrap(self):
+        for i in range(3):
+            if not (0 <= self.pos[i] <= self.grid.L[i]):
+                self.pos[i] = wrap(self.pos[i], self.grid.L[i])
+
+    def step(self, dt=0.0001):
         F = self.sum_forces()
         self.a = F*self.m_
         self.reset_force()
         self.vel = self.vel + self.a*dt
         self.pos = self.pos + self.vel*dt
-
-        # Boundry conditions
-        for i in range(3):
-            if not (0 <= self.pos[i] <= grid.L[i]):
-                self.pos[i] = wrap(self.pos[i], grid.L[i])
+        self.wrap()
 
     def step1(self, dt=0.001):
         self.pos = self.pos + self.vel*dt + 0.5*self.a*dt**2
+        self.wrap()
 
     def step2(self, dt=0.001):
         self.a = self.a_next
+        self.sum_forces()
         self.a_next = self.F*self.m_
         self.reset_force()
         self.vel = self.vel + 0.5*(self.a+self.a_next)*dt
