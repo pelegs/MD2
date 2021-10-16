@@ -31,7 +31,7 @@ def draw_vec(surface, pos, vec, color=[255,0,0]):
 
 
 width, height = 700, 700
-grid = Grid(n=10, L=[width,height,width], neighbors_dist=1)
+grid = Grid(n=20, L=[width,height,1], neighbors_dist=1)
 
 pygame.init()
 
@@ -46,21 +46,24 @@ for index1d, cell in enumerate(grid.cells):
     draw_cell(cells_bg, cell, [0,0,0])
 
 # Particles
-num_atoms = 75
+num_atoms = 1500
 atoms = [Atom(
               grid=grid,
               pos=np.random.uniform(0, width, 3),
               vel=np.random.uniform(-1, 1, 3),
               rad=5,
               mass=1,
-              color = np.random.randint(100,255,3),
+#              color = np.random.randint(100,255,3),
+              color = [175,175,175],
               id=id,
          )
          for id in range(num_atoms)
 ]
 
+atoms[0].color = [255,0,0]
+
 for atom in atoms:
-    atom.pos[2] = width
+    atom.pos[2] = 1
     atom.vel[2] = 0.0
 
 # Game loop
@@ -71,6 +74,10 @@ while run:
             run = False
             break
 
+    # Test neighbors
+    x, y = pygame.mouse.get_pos()
+    atoms[0].pos = np.array([x, y, width])
+
     # Put atom in grid
     grid.clear()
     for atom in atoms:
@@ -80,15 +87,21 @@ while run:
     for atom in atoms:
         atom.calc_neighbors()
 
-    # Mechanism
-    for atom1 in atoms:
-        atom1.step1(dt=0.0001)
-        for atom2 in atom1.neighbors:
-            atom1.SoftS(atom2, e=1E3)
     for atom in atoms:
-        atom.step2(dt=0.0001)
-    total_KE = sum([atom.calc_KE() for atom in atoms])
-    print('\r{:0.3f}'.format(total_KE))
+        if atom in atoms[0].neighbors:
+            atom.color = [0,200,0]
+        elif atom is not atoms[0]:
+            atom.color = [175,175,175]
+
+    # Mechanism
+#    for atom1 in atoms:
+#        atom1.step1(dt=0.0001)
+#        for atom2 in atom1.neighbors:
+#            atom1.SoftS(atom2, e=1E3)
+#    for atom in atoms:
+#        atom.step2(dt=0.0001)
+#    total_KE = sum([atom.calc_KE() for atom in atoms])
+#    print('\r{:0.3f}'.format(total_KE))
 
     # Reset screen
     screen.fill([0,0,0])
