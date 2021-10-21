@@ -128,7 +128,7 @@ class Atom:
         self.vel = self.vel + 0.5*(self.a+self.a_next)*dt
 
     def calc_P(self):
-        self.P = self.m * self.vel
+        return self.mass * self.vel
 
     def calc_KE(self):
         return 0.5 * self.mass * norm_sqr(self.vel)
@@ -136,10 +136,11 @@ class Atom:
     def set_indeices(self, index1d, index3d):
         self.index1d = index1d
         self.index3d = index3d
+        self.cell = self.grid.cells[self.index1d]
 
     def calc_neighbors(self):
         self.neighbors = [atom
-                          for cell in self.grid.cells[self.index1d].neighbors
+                          for cell in self.cell.neighbors
                           for atom in cell.particles
                           if atom != self
                          ]
