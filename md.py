@@ -94,12 +94,15 @@ class Atom:
             return
         else:
             d2 = dist_sqr_wrap(self.pos, atom2.pos, self.grid)
-            d6 = d2**3
-            d13 = d2**6.5
-            s6 = (self.rad+atom2.rad)**6
-            s12 = s6**2
-            dir = look_at(self.pos, atom2.pos)
-            SF = 24 * e * s6 * (d6-2*s6) / d13
+            if d2 < 0.001:
+                SF = 1
+            else:
+                d6 = d2**3
+                d13 = d2**6.5
+                s6 = (self.rad+atom2.rad)**6
+                s12 = s6**2
+                dir = look_at(self.pos, atom2.pos)
+                SF = 24 * e * s6 * (d6-2*s6) / d13
             self.add_force(SF*dir)
         return SF
 
@@ -154,6 +157,7 @@ class Cell:
         self.index3d = index3d
         self.ul_corner = ul_corner
         self.L = L
+        self.center = self.ul_corner + L/2
         self.neighbors = []
         self.particles = []
 
