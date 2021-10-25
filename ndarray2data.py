@@ -25,6 +25,7 @@ with open(xyz_filename, 'w') as f:
 # NOTE: Assuming mass=1 for all atoms
 measure_filename = '{}.data'.format(outfile)
 with open(measure_filename, 'w') as f:
+    f.write('Ek P\n')
     for step in data:
         total_ek = np.sum([0.5*np.linalg.norm(v)**2 for v in step[:,3:]])
         cm_momentum = np.sum([v for v in step[:,3:]], axis=0)
