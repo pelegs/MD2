@@ -8,7 +8,7 @@ from sys import stderr
 
 
 Lx, Ly, Lz = 1000, 1000, 1000
-grid = Grid(n=5, L=[Lx,Ly,Lz], neighbors_dist=1)
+grid = Grid(n=10, L=[Lx,Ly,Lz], neighbors_dist=1)
 
 # Particles
 num_atoms = len(grid.cells)
@@ -27,7 +27,7 @@ atoms = [Atom(
 ]
 
 # Set kinetic energy to specific val
-Ekin = 1.7E4
+Ekin = 1.7E5
 Ekin_perAtom = Ekin/num_atoms
 for atom in atoms:
     atom.vel = set_norm(
@@ -41,12 +41,16 @@ CMP_perAtom = CMP/num_atoms
 for atom in atoms:
     atom.vel = atom.vel - CMP_perAtom
 
-# Loop
-frame = 0
-num_frames = 5000
-while frame < num_frames:
-    frame += 1
+# Set time step
+dt = 0.005
 
+# NDarray that stores all pos and vel data
+num_steps = 350
+data = np.zeros(shape=(num_steps, num_atoms, 6))
+
+# Loop
+step = 0
+while step < num_steps:
     # Put atom in grid
     grid.clear()
     for atom in atoms:
@@ -58,21 +62,23 @@ while frame < num_frames:
 
     # Mechanism
     for atom1 in atoms:
-        atom1.step1(dt=0.005)
+        atom1.step1(dt)
         for atom2 in atom1.neighbors:
             atom1.SoftS(atom2, e=1E3)
     for atom in atoms:
-        atom.step2(dt=0.005)
+        atom.step2(dt)
 
-#    # Measurements
-#    total_KE = sum([atom.calc_KE() for atom in atoms])
-#    CMP = np.sum(np.array([atom.calc_P() for atom in atoms]), axis=0)
-#
-    # Output
-#    print(frame, total_KE, CMP)
-    stderr.write('\rFrame: {:04d}'.format(frame))
-    print(num_atoms)
-    print('Frame: {}'.format(frame))
-    for atom in atoms:
-        print('He {}'.format(' '.join(map(str, atom.pos))))
+    # Measurements
+    for i, atom in enumerate(atoms):
+        data[step, i, :3] = atom.pos
+        data[step, i, 3:] = atom.vel
+
+    # Update step count
+    stderr.write('\rStep: {:05d}/{:05d}'.format(
+        step, num_steps
+    ))
+    step += 1
+
+# Output
+np.save('test3.data', data)
 stderr.write('\n')
